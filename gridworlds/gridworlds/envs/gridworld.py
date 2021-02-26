@@ -119,7 +119,16 @@ class GridWorld(gym.Env):
         return self.position
 
     def render(self, mode="human", close=False):
+        #screen = self.basic_screen.copy()
+        #screen[self.position] = self.config["player_color"]
+        #cv2.imshow("GridWorld environment", screen)
+
+        #cv2.resizeWindow("GridWorld environment", 600, 600)
+        #cv2.waitKey(100)
+
         screen = self.basic_screen.copy()
         screen[self.position] = self.config["player_color"]
+        cv2.namedWindow("GridWorld environment", cv2.WINDOW_NORMAL)
+        cv2.resizeWindow("GridWorld environment", 400, 300)
         cv2.imshow("GridWorld environment", screen)
         cv2.waitKey(100)
