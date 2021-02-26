@@ -18,10 +18,12 @@ grid_q.py
 *.log
 gym_gridworld
 
+.idea/
+.idea\
+
 __pycache__/
 *.py[cod]
 *$py.class
 
 /progress_test/*
 
-.idea/
