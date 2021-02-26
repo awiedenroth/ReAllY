@@ -18,6 +18,6 @@ grid_q.py
 *.log
 gym_gridworld
 
-progress_test
+progress_test/
 
-.idea
+.idea/
