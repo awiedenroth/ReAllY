@@ -153,6 +153,7 @@ if __name__ == "__main__":
         time_steps = manager.test(test_steps)
         manager.update_aggregator(loss=loss, time_steps=time_steps)
         # print progress
+        print(loss)
         print(
             f"epoch ::: {e}  loss ::: {np.mean([np.mean(l) for l in loss])}   avg env steps ::: {np.mean(time_steps)}"
         )
