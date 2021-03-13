@@ -17,8 +17,8 @@ class MyModel(tf.keras.Model):
     def __init__(self, output_units=2):
 
         super(MyModel, self).__init__()
-        self.layer2 = tf.keras.layers.Dense(20,activation=tf.keras.activations.relu)
-        self.layer3 = tf.keras.layers.Dense(20,activation=tf.keras.activations.relu)
+        self.layer2 = tf.keras.layers.Dense(32,activation=tf.keras.activations.tanh)
+        self.layer3 = tf.keras.layers.Dense(32,activation=tf.keras.activations.tanh)
         self.layer4 = tf.keras.layers.Dense(output_units)
 
     def call(self, x_in):
@@ -106,7 +106,7 @@ if __name__ == "__main__":
 
     optimizer=tf.keras.optimizers.Adam(learning_rate)
     mse=tf.keras.losses.MeanSquaredError()
-
+    epsilon=1
     for e in range(epochs):
 
         # training core
@@ -123,13 +123,14 @@ if __name__ == "__main__":
         data_dict = dict_to_dict_of_datasets(sample_dict, batch_size=optim_batch_size)
 
         print("optimizing...")
-
+        #print(agent.model.trainable_variables[0])
         itertuple = (data_dict["state"], data_dict["action"], data_dict["reward"], data_dict["state_new"], data_dict["not_done"])
         for state, action, reward, state_new, not_done in zip(*itertuple):
 
         # TODO: optimize agent
             
             with tf.GradientTape() as tape:
+                
                 #weights=agent.model.trainable_variables
                 #tape.watch(weights)
                 qtarget=tf.cast(reward,tf.float32)+gamma*tf.cast(agent.max_q(state_new),tf.float32)
@@ -154,7 +155,8 @@ if __name__ == "__main__":
         )
 
         # yeu can also alter your managers parameters
-        manager.set_epsilon(epsilon=0.99)
+        epsilon*=0.9
+        manager.set_epsilon(epsilon)
 
         if e % saving_after == 0:
             # you can save models
