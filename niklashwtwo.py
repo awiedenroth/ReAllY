@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     buffer_size = 5000
     test_steps = 1000
-    epochs = 20
+    epochs = 50
     sample_size = 1000
     optim_batch_size = 1
     saving_after = 5
@@ -117,6 +117,8 @@ if __name__ == "__main__":
         print("optimizing...")
         #print(agent.model.trainable_variables[0])
         itertuple = (data_dict["state"], data_dict["action"], data_dict["reward"], data_dict["state_new"], data_dict["not_done"])
+        lossSum=0
+        count=0
         for state, action, reward, state_new, not_done in zip(*itertuple):
 
         # TODO: optimize agent
@@ -131,20 +133,24 @@ if __name__ == "__main__":
                 #print(qtarget,output)
                 loss=mse(qtarget,output)
                 gradients=tape.gradient(loss,agent.model.trainable_variables)
+                lossSum+=loss
+                count+=1
                 #print(gradients,loss)
             optimizer.apply_gradients(zip(gradients,agent.model.trainable_variables))
             #manager.set_agent(agent.model.trainable_variables)
             if not_done == False:
                 break
         # update aggregator
+        loss=lossSum/count
         loss=tf.reshape(loss,(1,))
         time_steps = manager.test(test_steps)
         manager.update_aggregator(loss=loss, time_steps=time_steps)
         # print progress
-        print(loss)
         print(
             f"epoch ::: {e}  loss ::: {np.mean([np.mean(l) for l in loss])}   avg env steps ::: {np.mean(time_steps)}"
         )
+
+        manager.set_agent(agent.model.get_weights())
 
         # yeu can also alter your managers parameters
         epsilon*=0.9
