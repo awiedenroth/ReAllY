@@ -1,6 +1,5 @@
 import logging, os
 
-print("b")
 logging.disable(logging.WARNING)
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 import tensorflow as tf
@@ -53,7 +52,6 @@ class ModelContunous(tf.keras.Model):
 
 
 if __name__ == "__main__":
-    print("a")
     kwargs = {
         "model": MyModel,
         "environment": "CartPole-v0",
@@ -63,16 +61,13 @@ if __name__ == "__main__":
         "num_episodes": 20,
         "epsilon": 1,
     }
-    print("a")
 
     ray.init(log_to_driver=False)
 
-    print("a")
     manager = SampleManager(**kwargs)
     # where to save your results to: create this directory in advance!
     saving_path = os.getcwd() + "/progress_test"
 
-    print("a")
     buffer_size = 5000
     test_steps = 1000
     epochs = 20
@@ -82,15 +77,13 @@ if __name__ == "__main__":
 
     learning_rate=0.001
     gamma=0.85
-
-    print("a")
+    
     # keys for replay buffer -> what you will need for optimization
     optim_keys = ["state", "action", "reward", "state_new", "not_done"]
 
     # initialize buffer
     manager.initilize_buffer(buffer_size, optim_keys)
 
-    print("a")
     # initilize progress aggregator
     manager.initialize_aggregator(
         path=saving_path, saving_after=5, aggregator_keys=["loss", "time_steps"]
@@ -100,7 +93,6 @@ if __name__ == "__main__":
     print("test before training: ")
     manager.test(test_steps, do_print=True)
 
-    print("a")
     # get initial agent
     agent = manager.get_agent()
 
