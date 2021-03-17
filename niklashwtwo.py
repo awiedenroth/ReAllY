@@ -70,7 +70,7 @@ if __name__ == "__main__":
 
     buffer_size = 5000
     test_steps = 1000
-    epochs = 50
+    epochs = 100
     sample_size = 1000
     optim_batch_size = 1
     saving_after = 5
@@ -127,7 +127,10 @@ if __name__ == "__main__":
                 
                 #weights=agent.model.trainable_variables
                 #tape.watch(weights)
-                qtarget=tf.cast(reward,tf.float32)+gamma*tf.cast(agent.max_q(state_new),tf.float32)
+                if not_done:
+                    qtarget=tf.cast(reward,tf.float32)+gamma*tf.cast(agent.max_q(state_new),tf.float32)
+                else:
+                    qtarget=tf.cast(reward,tf.float32)
                 index=(state.numpy()[0,0],state.numpy()[0,1])
                 output=agent.q_val(state,action)
                 #print(qtarget,output)
@@ -138,8 +141,7 @@ if __name__ == "__main__":
                 #print(gradients,loss)
             optimizer.apply_gradients(zip(gradients,agent.model.trainable_variables))
             #manager.set_agent(agent.model.trainable_variables)
-            if not_done == False:
-                break
+           
         # update aggregator
         loss=lossSum/count
         loss=tf.reshape(loss,(1,))
