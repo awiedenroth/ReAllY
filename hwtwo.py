@@ -10,8 +10,8 @@ class qnet (nn.Module):
     def __init__ (self):
         super(qnet, self).__init__()
 
-        self.fcone = nn.Linear(4, 2)
-        #self.fctwo = nn.Linear(30, 10)
+        self.fcone = nn.Linear(4, 3)
+        self.fctwo = nn.Linear(3, 2)
         #self.fcthree = nn.Linear(10, 2)
 
     def forward(self, x):
@@ -20,8 +20,8 @@ class qnet (nn.Module):
         x = self.fcone(x)
         x = F.relu(x)
 
-        #x = self.fctwo(x)
-        #x = F.relu(x)
+        x = self.fctwo(x)
+        x = F.relu(x)
 
         #x = self.fcthree(x)
         #x = F.relu
@@ -30,11 +30,11 @@ class qnet (nn.Module):
 
 
 env = gym.make('CartPole-v0')
-obs = env.reset()
-#renderedenv = env.render().reshape(1, -1)
-qnetwork = qnet()
 
-alpha = 0.1
+qnetwork = qnet()
+optimizer = torch.optim.SGD(qnetwork.parameters(), lr=0.01, momentum=0.9)
+
+alpha = 0.9
 gamma = 0.6
 epsilon = 0.1
 
@@ -43,31 +43,38 @@ penalties = []
 
 for i_episode in range(20):
     epochs, penalties, reward = 0, 0, 0
+
+    obs = env.reset()
+    #env.render()
     done = False
 
+    count = 0
+
     while not done:
+        count += 1
+
         if random.uniform() < epsilon:
             action = env.action_space.sample()
         else:
-            action = np.argmax( qnetwork.forward( obs ).numpy() )
+            action = torch.argmax( qnetwork.forward( obs ) ).item()
 
         nextobservation, reward, done, info = env.step(action)
 
-        oldq = np.max( qnetwork.forward( obs ).item() )
-        nextq = np.max( qnetwork.forward( nextobservation ).item() )
+        oldq = qnetwork.forward( obs )
+        nextq = qnetwork.forward( nextobservation )
 
         newval = (1 - alpha) * oldq + alpha * (reward + gamma * nextq)
 
-        qnetwork.zero_grad()
-        nextq.backward(newval)
-
+        optimizer.zero_grad()
+        oldq.backward(newval)
+        optimizer.step()
 
         if reward == -10:
             penalties += 1
 
-        renderedenv = nextrenderedenv
+        obs = nextobservation
         epochs += 1
 
-print(f"Episode: {epochs}")
+    print(f"Episode: {i_episode} Count: {count}")
 
 env.close()
