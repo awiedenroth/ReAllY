@@ -43,7 +43,7 @@ epochs = []
 penalties = []
 counts = []
 
-for i_episode in range(500):
+for i_episode in range(100):
     epochs, penalties, reward = 0, 0, 0
 
     obs = env.reset()
@@ -57,7 +57,7 @@ for i_episode in range(500):
         if random.uniform() < epsilon:
             action = env.action_space.sample()
         else:
-            action = torch.argmin( qnetwork.forward( obs ) ).item()
+            action = torch.argmax( qnetwork.forward( obs ) ).item()
 
         nextobservation, reward, done, info = env.step(action)
 
@@ -80,6 +80,14 @@ for i_episode in range(500):
     epsilon = epsilon * 0.9
     counts.append(count)
     #print(f"Episode: {i_episode} Count: {count}")
+
+'''
+obs = env.reset()
+env.render()
+while True:
+    action = torch.argmax( qnetwork.forward( obs ) ).item()
+    env.step(action)
+'''
 
 import matplotlib.pyplot as plt
 plt.plot(counts)
