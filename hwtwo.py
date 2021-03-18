@@ -33,21 +33,22 @@ env = gym.make('CartPole-v0')
 
 qnetwork = qnet()
 optimizer = torch.optim.SGD(qnetwork.parameters(), lr=0.01, momentum=0.9)
+loss = torch.nn.MSELoss()
 
-alpha = 0.9
-gamma = 0.6
-epsilon = 0.1
+alpha = 0.09
+gamma = 0.9
+epsilon = 1
 
 epochs = []
 penalties = []
+counts = []
 
-for i_episode in range(20):
+for i_episode in range(500):
     epochs, penalties, reward = 0, 0, 0
 
     obs = env.reset()
     #env.render()
     done = False
-
     count = 0
 
     while not done:
@@ -56,7 +57,7 @@ for i_episode in range(20):
         if random.uniform() < epsilon:
             action = env.action_space.sample()
         else:
-            action = torch.argmax( qnetwork.forward( obs ) ).item()
+            action = torch.argmin( qnetwork.forward( obs ) ).item()
 
         nextobservation, reward, done, info = env.step(action)
 
@@ -65,8 +66,9 @@ for i_episode in range(20):
 
         newval = (1 - alpha) * oldq + alpha * (reward + gamma * nextq)
 
+        l = loss(oldq, newval)
         optimizer.zero_grad()
-        oldq.backward(newval)
+        l.backward()
         optimizer.step()
 
         if reward == -10:
@@ -75,6 +77,13 @@ for i_episode in range(20):
         obs = nextobservation
         epochs += 1
 
-    print(f"Episode: {i_episode} Count: {count}")
+    epsilon = epsilon * 0.9
+    counts.append(count)
+    #print(f"Episode: {i_episode} Count: {count}")
+
+import matplotlib.pyplot as plt
+plt.plot(counts)
+plt.title( f"Average Number of Steps: {sum(counts)/len(counts)}" )
+plt.show()
 
 env.close()
