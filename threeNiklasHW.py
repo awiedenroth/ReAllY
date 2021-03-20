@@ -17,8 +17,8 @@ class QModel(tf.keras.Model):
     def __init__(self, output_units=1):
 
         super(QModel, self).__init__()
-        self.layer2 = tf.keras.layers.Dense(32,activation=tf.keras.activations.tanh)
-        self.layer3 = tf.keras.layers.Dense(32,activation=tf.keras.activations.tanh)
+        self.layer2 = tf.keras.layers.Dense(32,activation=tf.keras.layers.LeakyReLU(alpha=0.01))
+        self.layer3 = tf.keras.layers.Dense(32,activation=tf.keras.layers.LeakyReLU(alpha=0.01))
         self.layer4 = tf.keras.layers.Dense(output_units)
 
     def call(self, x_in):
@@ -33,8 +33,8 @@ class PiModel(tf.keras.Model):
     def __init__(self, output_units=2):
 
         super(PiModel, self).__init__()
-        self.layer2 = tf.keras.layers.Dense(32,activation=tf.keras.activations.tanh)
-        self.layer3 = tf.keras.layers.Dense(32,activation=tf.keras.activations.tanh)
+        self.layer2 = tf.keras.layers.Dense(32,activation=tf.keras.layers.LeakyReLU(alpha=0.01))
+        self.layer3 = tf.keras.layers.Dense(32,activation=tf.keras.layers.LeakyReLU(alpha=0.01))
         self.layer4 = tf.keras.layers.Dense(output_units*2)
 
     def call(self, x_in):
@@ -45,7 +45,7 @@ class PiModel(tf.keras.Model):
         output["action"] = x
         return output
 
-class MyModel(tf.keras.Model):
+"""class MyModel(tf.keras.Model):
     def __init__(self, output_units=2):
 
         super(MyModel, self).__init__()
@@ -61,21 +61,22 @@ class MyModel(tf.keras.Model):
         #print(a)
         output["q_values"]=self.q(tf.concat([a["action"],x_in],axis=1))["q_values"]
         #print(output)
-        return output
+        # dict mit mu, sigma und q_values
+        return output"""
         
 
-    def max_q(self, x):
+    """def max_q(self, x):
         # computes the maximum q-value along each batch dimension
         model_out = self(x)
         print(model_out)
         x = tf.reduce_max(model_out["mu"], axis=-1)
-        return x
+        return x"""
 
 if __name__ == "__main__":
     kwargs = {
         "model": MyModel,
         "environment": "LunarLanderContinuous-v2",
-        "num_parallel": 5,
+        "num_parallel": 8,
         "total_steps": 400,
         "action_sampling_type": "continous_normal_diagonal",
         "num_episodes": 20,
@@ -117,7 +118,7 @@ if __name__ == "__main__":
     # get initial agent
     agent = manager.get_agent()
     import copy
-    agentTarget = copy.deepcopy(agent)
+    #agentTarget = copy.deepcopy(agent)
     optimizer_q=tf.keras.optimizers.Adam(learning_rate)
     optimizer_pi=tf.keras.optimizers.Adam(learning_rate)
     mse=tf.keras.losses.MeanSquaredError()
@@ -146,22 +147,28 @@ if __name__ == "__main__":
             
             with tf.GradientTape(persistent=True) as tapeq:#, tf.GradientTape as tapepi:
                 #manager.set_agent(agentTarget)
-                qtarget=tf.cast(reward,tf.float32)+gamma*tf.cast(not_done,tf.float32)*tf.cast(agent.max_q(state_new),tf.float32)
+                # berechne q learning teil siehe hw 2
+                qtarget=tf.cast(reward/100,tf.float32)+gamma*tf.cast(not_done,tf.float32)*tf.cast(agent.max_q(state_new),tf.float32)
                 #qtarget=tf.cast(reward,tf.float32)+gamma*tf.cast(not_done,tf.float32)*tf.cast(agentTarget.max_q(state_new),tf.float32)
                 #manager.set_agent(agent)
 
-                index=(state.numpy()[0,0],state.numpy()[0,1])
-                output,=agent.q_val(state,[[0]])
+                #index=(state.numpy()[0,0],state.numpy()[0,1])
+                # q val soll state und action bekommen von dieser runde und q-value davon predicten
+                ### nochmal ansehen!!!!
+                output=agent.q_val(state,[[0]])
+                # wie weit ist network off, also vorhersage von diesem schritt im vergleich zum letzten schritt
                 loss=mse(qtarget,output)
+                # trainieren q network mit loss (temporal difference learning
                 gradients_q=tapeq.gradient(loss,agent.model.q.trainable_variables)
                 optimizer_q.apply_gradients(zip(gradients_q,agent.model.q.trainable_variables))
+                # trainieren pi network mit dem output des q networks
                 gradients_pi=tapeq.gradient(-output,agent.model.pi.trainable_variables)
                 optimizer_pi.apply_gradients(zip(gradients_pi,agent.model.pi.trainable_variables))
                 lossSum+=loss
                 count+=1
                 #print(gradients,loss)
 
-            #manager.set_agent(agent.model.get_weights())
+            manager.set_agent(agent.model.get_weights())
             #agentTarget.model.trainable_variables.assign(agent.model.trainable_variables)
             #paramsTarget=p_ * paramsTarget + (1-p_)*agent.model.trainable_variables
         # update aggregator
