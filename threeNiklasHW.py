@@ -76,10 +76,10 @@ if __name__ == "__main__":
         "model": MyModel,
         "environment": "LunarLanderContinuous-v2",
         "num_parallel": 5,
-        "total_steps": 100,
+        "total_steps": 400,
         "action_sampling_type": "continous_normal_diagonal",
         "num_episodes": 20,
-        "epsilon": 1,
+        "epsilon": 0.9,
     }
 
     ray.init(log_to_driver=False)
@@ -88,10 +88,10 @@ if __name__ == "__main__":
     # where to save your results to: create this directory in advance!
     saving_path = os.getcwd() + "/progress_test"
 
-    buffer_size = 5000
+    buffer_size = 40000
     test_steps = 1000
     epochs = 100
-    sample_size = 1000
+    sample_size = 4000
     optim_batch_size = 1
     saving_after = 5
 
@@ -121,7 +121,7 @@ if __name__ == "__main__":
     optimizer_q=tf.keras.optimizers.Adam(learning_rate)
     optimizer_pi=tf.keras.optimizers.Adam(learning_rate)
     mse=tf.keras.losses.MeanSquaredError()
-    epsilon=1
+    epsilon=0.9
     for e in range(epochs):
 
         # training core
