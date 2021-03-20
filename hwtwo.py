@@ -21,7 +21,7 @@ class qnet (nn.Module):
         x = F.relu(x)
 
         x = self.fctwo(x)
-        x = F.relu(x)
+        #x = F.relu(x)
 
         #x = self.fcthree(x)
         #x = F.relu
@@ -42,6 +42,7 @@ epsilon = 1
 epochs = []
 penalties = []
 counts = []
+losses = []
 
 for i_episode in range(100):
     epochs, penalties, reward = 0, 0, 0
@@ -67,16 +68,17 @@ for i_episode in range(100):
         newval = (1 - alpha) * oldq + alpha * (reward + gamma * nextq)
 
         l = loss(oldq, newval)
-        optimizer.zero_grad()
+        #optimizer.zero_grad()
         l.backward()
-        optimizer.step()
 
         if reward == -10:
             penalties += 1
 
+        #print(obs)
         obs = nextobservation
         epochs += 1
 
+    optimizer.step()
     epsilon = epsilon * 0.9
     counts.append(count)
     #print(f"Episode: {i_episode} Count: {count}")
@@ -90,8 +92,9 @@ while True:
 '''
 
 import matplotlib.pyplot as plt
-plt.plot(counts)
+plt.plot(losses)
 plt.title( f"Average Number of Steps: {sum(counts)/len(counts)}" )
 plt.show()
+
 
 env.close()
